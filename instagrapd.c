@@ -48,9 +48,12 @@ child_proc(int conn)
 	struct student new;
 	int len = 0 ;
 	int s ;
-	int result = 1;
+	int result = 0;
 	struct student stu;
-	
+	int listen_fd, new_socket ;
+        struct sockaddr_in address;
+        int addrlen = sizeof(address);
+
 //	struct inoutc i;
 	while((s= recv(conn,(void*)&stu,sizeof(struct student),0))>0){
 	new.id = stu.id;
@@ -91,7 +94,7 @@ child_proc(int conn)
 
         memset(&serv_addr, '0', sizeof(serv_addr));
         serv_addr.sin_family = AF_INET;
-        serv_addr.sin_port = htons(9494);
+        serv_addr.sin_port = htons(9594);
         if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr) <= 0) {
                perror("inet_pton failed : ") ;
                 exit(EXIT_FAILURE) ;
@@ -143,16 +146,47 @@ child_proc(int conn)
 	data = "It's complete, please type in password";
 	len=strlen(data);
 	send(conn,data,len,0);
-	while(recv(conn,buffer,1024,0)>0){	
+	shutdown(conn,SHUT_WR);
+	close(conn);
+//	create a new socket connection
+//==================================back to submitter====================================
+//	socket created new_socket
+
+	 listen_fd = socket(AF_INET /*IPv4*/, SOCK_STREAM /*TCP*/, 0 /*IP*/) ;
+        if (listen_fd == 0)  {
+                perror("socket failed : ");
+                exit(EXIT_FAILURE);
+        }
+
+        memset(&address, '0', sizeof(address));
+        address.sin_family = AF_INET;
+        address.sin_addr.s_addr = INADDR_ANY /* the localhost*/ ;
+        address.sin_port = htons(9119);
+        if (bind(listen_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
+                perror("bind failed : ");
+                exit(EXIT_FAILURE);
+        }
+
+        if (listen(listen_fd, 16 /* the size of waiting queue*/) < 0) {
+                        perror("listen failed : ");
+                        exit(EXIT_FAILURE);
+                }
+
+	 new_socket = accept(listen_fd, (struct sockaddr *) &address, (socklen_t*)&addrlen) ;
+
+	while(recv(new_socket,buffer,1024,0)>0){}	
+	printf("received buck!\n");	
 	
 	printf("%s\n",buffer);
-	}
 //	strcpy(stu.result,"YOUHavePAssed");
 	if(strcmp(buffer,stu.password)==0){
-		send(conn,&i,sizeof(struct student),0);
-		shutdown(conn,SHUT_WR);
-
-		}			
+		send(new_socket,&stu,sizeof(struct student),0);
+		shutdown(new_socket,SHUT_WR);
+	}
+	else{
+	printf("This is the wrong Password!\n");
+		
+	}
 	//send(conn,&i,sizeof(struct student),0);
 
 	}
@@ -275,7 +309,7 @@ main(int argc, char const *argv[])
 	memset(&address, '0', sizeof(address)); 
 	address.sin_family = AF_INET; 
 	address.sin_addr.s_addr = INADDR_ANY /* the localhost*/ ; 
-	address.sin_port = htons(9393); 
+	address.sin_port = htons(9059); 
 	if (bind(listen_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
 		perror("bind failed : "); 
 		exit(EXIT_FAILURE); 

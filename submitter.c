@@ -31,6 +31,9 @@ main(int argc, char const *argv[])
 	int s, len ;
 	char buffer[1024] = {0}; 
 	char * data ;
+	int listen_fd, new_socket ;
+        struct sockaddr_in address;
+        int addrlen = sizeof(address);
 	
 	sock_fd = socket(AF_INET, SOCK_STREAM, 0) ;
 	
@@ -41,7 +44,7 @@ main(int argc, char const *argv[])
 
 	memset(&serv_addr, '0', sizeof(serv_addr)); 
 	serv_addr.sin_family = AF_INET; 
-	serv_addr.sin_port = htons(9393); 
+	serv_addr.sin_port = htons(9059); 
 	if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr) <= 0) {
 		perror("inet_pton failed : ") ; 
 		exit(EXIT_FAILURE) ;
@@ -74,23 +77,45 @@ main(int argc, char const *argv[])
 		
 	
 	}
+	close(sock_fd);
+//	create a new socket
+
+	sock_fd = socket(AF_INET, SOCK_STREAM, 0) ;
+
+        if (sock_fd <= 0) {
+                perror("socket failed : ") ;
+                exit(EXIT_FAILURE) ;
+        }
+
+        memset(&serv_addr, '0', sizeof(serv_addr));
+        serv_addr.sin_family = AF_INET;
+        serv_addr.sin_port = htons(9119);
+        if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr) <= 0) {
+                perror("inet_pton failed : ") ;
+                exit(EXIT_FAILURE) ;
+        }
+
+        if (connect(sock_fd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) {
+                perror("connect failed : ") ;
+                exit(EXIT_FAILURE) ;
+        }
+
+
+
 	scanf("%s",buffer);
-	printf("%s\n",buffer);
-	data = buffer;
-	len=strlen(data);
-	printf("this is data : %s\n",data);
-	if(send(sock_fd,data,len,0)>0)
-		printf("sent!");
-//	recv(sock_fd,(void*)&stud,sizeof(struct student),0);
+	
+	send(sock_fd,buffer,1024,0);
 	shutdown(sock_fd,SHUT_WR);
+	printf("%s\n",buffer);
+	printf("sent!\n");
+//	recv(sock_fd,(void*)&stud,sizeof(struct student),0);
 	printf("buck\n");
-	while(1){
-	if(recv(sock_fd,(void*)&stud,sizeof(struct student),0)>0)
-		break;
-	}
-//	printf("%s\n",stud.result);
+	
+	while(recv(sock_fd,(void*)&stud,sizeof(struct student),0)>0)
+	{}
+	
+	printf("%d cases passed!\n",stud.result);
 		
-	printf("HELLO\n");	
 	
 //	printf("Please type);
 /*
