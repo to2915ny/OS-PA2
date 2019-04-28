@@ -51,23 +51,30 @@ main(int argc, char const *argv[])
 			memcpy(ipadd,optarg,30);
 			char *ptr = strtok(ipadd,":");
                		strcpy(ip,ptr);
+			printf("%s\n",ip);
                		ptr = strtok(NULL," ");
                 	strcpy(ports,ptr);
                 	portnum = atoi(ports);
+			printf("%d\n",portnum);
 			break;
 			}
 		case 'u'://id
 			stud.id = atoi(optarg);
+			printf("%d\n",stud.id);
 			break;
 		case 'k':{//password
 			memcpy(passandfile,optarg,30);
-			char *ptr1 = strtok(passandfile," ");
+			char *ptr1 = strtok(passandfile,":");
 			strcpy(stud.password,ptr1);
+			printf("%s\n",stud.password);
+			ptr1 = strtok(NULL,"\n");
+			strcpy(file,ptr1);
+			printf("%s\n",file);
 			break;}
 		
 		}		
 	}
-	strcpy(file, argv[7]);
+	
 	sock_fd = socket(AF_INET, SOCK_STREAM, 0) ;
 	
 	if (sock_fd <= 0) {
@@ -78,7 +85,7 @@ main(int argc, char const *argv[])
 	memset(&serv_addr, '0', sizeof(serv_addr)); 
 	serv_addr.sin_family = AF_INET; 
 	serv_addr.sin_port = htons(portnum); 
-	if (inet_pton(AF_INET, ip, &serv_addr.sin_addr) <= 0) {
+	if (inet_pton(AF_INET, ipadd, &serv_addr.sin_addr) <= 0) {
 		perror("inet_pton failed : ") ; 
 		exit(EXIT_FAILURE) ;
 	} 
@@ -87,6 +94,11 @@ main(int argc, char const *argv[])
 		perror("connect failed : ") ;
 		exit(EXIT_FAILURE) ;
 	}
+	/*
+	stud.id =21400547;
+	strcpy(stud.password,"thisismypass");
+	strcpy(stud.targetc,readFile(argv[1]));
+	*/
 	strcpy(stud.targetc,readFile(file));
 	send(sock_fd,&stud, sizeof(struct student),0);
 	shutdown(sock_fd,SHUT_WR);	
@@ -108,7 +120,7 @@ main(int argc, char const *argv[])
 
         memset(&serv_addr, '0', sizeof(serv_addr));
         serv_addr.sin_family = AF_INET;
-        serv_addr.sin_port = htons(portnum+1);
+        serv_addr.sin_port = htons(9987);
         if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr) <= 0) {
                 perror("inet_pton failed : ") ;
                 exit(EXIT_FAILURE) ;
@@ -127,6 +139,7 @@ main(int argc, char const *argv[])
 	shutdown(sock_fd,SHUT_WR);
 	printf("%s\n",buffer);
 	printf("sent!\n");
+//	recv(sock_fd,(void*)&stud,sizeof(struct student),0);
 	printf("buck\n");
 	
 	while(recv(sock_fd,(void*)&stud,sizeof(struct student),0)>0)
