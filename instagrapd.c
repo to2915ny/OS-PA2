@@ -94,7 +94,7 @@ child_proc(int conn,uint16_t work,uint16_t port)
                perror("inet_pton failed : ") ;
                 exit(EXIT_FAILURE) ;
        }
-
+	printf("%d\n",work);
         if (connect(sock_fd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) {
                 perror("connect failed : ") ;
                 exit(EXIT_FAILURE) ;
